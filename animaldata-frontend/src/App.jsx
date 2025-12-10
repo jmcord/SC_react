@@ -16,6 +16,9 @@ function App() {
     registrarAlimentacion,
     obtenerHistorial,
     obtenerAnimal,
+    asignarVeterinario,
+    asignarTransportista,
+    asignarProductor,
   } = useAnimalTrace();
 
   const [nuevoAnimal, setNuevoAnimal] = useState({
@@ -37,6 +40,11 @@ function App() {
 
   const [consultaId, setConsultaId] = useState("");
   const [animalConsultado, setAnimalConsultado] = useState(null);
+
+  const [nuevoRol, setNuevoRol] = useState({
+    role: "VETERINARIO",
+    address: "",
+  });
 
   // ───── Handlers ─────
 
@@ -100,6 +108,19 @@ function App() {
     setAnimalConsultado(a);
   };
 
+  const handleAsignarRol = async (e) => {
+    e.preventDefault();
+    if (!nuevoRol.address) return;
+
+    if (nuevoRol.role === "VETERINARIO") {
+      await asignarVeterinario(nuevoRol.address);
+    } else if (nuevoRol.role === "TRANSPORTISTA") {
+      await asignarTransportista(nuevoRol.address);
+    } else if (nuevoRol.role === "PRODUCTOR") {
+      await asignarProductor(nuevoRol.address);
+    }
+  };
+
   // ───── UI ─────
 
   return (
@@ -119,8 +140,7 @@ function App() {
               Cuenta conectada: <b>{account}</b>
             </p>
             <p>
-              Roles →{" "}
-              Admin: {roles.isAdmin ? "✅" : "❌"} · Veterinario:{" "}
+              Roles → Admin: {roles.isAdmin ? "✅" : "❌"} · Veterinario:{" "}
               {roles.isVeterinario ? "✅" : "❌"} · Transportista:{" "}
               {roles.isTransportista ? "✅" : "❌"} · Productor:{" "}
               {roles.isProductor ? "✅" : "❌"}
@@ -131,12 +151,63 @@ function App() {
         {error && <p style={{ color: "red" }}>⚠ {error}</p>}
       </section>
 
+      {/* Asignar roles (solo admin) */}
+      {roles.isAdmin && (
+        <>
+          <hr />
+          <section style={{ marginTop: 20 }}>
+            <h2>🔐 Asignar roles (solo ADMIN)</h2>
+            <form
+              onSubmit={handleAsignarRol}
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <select
+                value={nuevoRol.role}
+                onChange={(e) =>
+                  setNuevoRol({ ...nuevoRol, role: e.target.value })
+                }
+              >
+                <option value="VETERINARIO">VETERINARIO</option>
+                <option value="TRANSPORTISTA">TRANSPORTISTA</option>
+                <option value="PRODUCTOR">PRODUCTOR</option>
+              </select>
+
+              <input
+                type="text"
+                placeholder="Dirección 0x..."
+                style={{ minWidth: 260 }}
+                value={nuevoRol.address}
+                onChange={(e) =>
+                  setNuevoRol({ ...nuevoRol, address: e.target.value })
+                }
+              />
+
+              <button type="submit" disabled={txLoading}>
+                {txLoading ? "Enviando..." : "Asignar rol"}
+              </button>
+            </form>
+            <p style={{ fontSize: 12, marginTop: 4 }}>
+              Solo la cuenta con DEFAULT_ADMIN_ROLE (deployer) puede asignar
+              roles.
+            </p>
+          </section>
+        </>
+      )}
+
       <hr />
 
       {/* Registrar animal */}
       <section style={{ marginTop: 20 }}>
         <h2>1️⃣ Registrar animal (solo ADMIN)</h2>
-        <form onSubmit={handleRegistrarAnimal} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <form
+          onSubmit={handleRegistrarAnimal}
+          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+        >
           <input
             type="number"
             placeholder="ID"
@@ -179,7 +250,12 @@ function App() {
         </p>
 
         <form
-          style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 500 }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxWidth: 500,
+          }}
         >
           <input
             type="number"
@@ -239,7 +315,10 @@ function App() {
       {/* Consultar animal */}
       <section style={{ marginTop: 20 }}>
         <h2>3️⃣ Consultar datos de un animal</h2>
-        <form onSubmit={handleObtenerAnimal} style={{ display: "flex", gap: 8 }}>
+        <form
+          onSubmit={handleObtenerAnimal}
+          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+        >
           <input
             type="number"
             placeholder="ID animal"
@@ -266,7 +345,10 @@ function App() {
       {/* Historial */}
       <section style={{ marginTop: 20, marginBottom: 40 }}>
         <h2>4️⃣ Historial de eventos de un animal</h2>
-        <form onSubmit={handleObtenerHistorial} style={{ display: "flex", gap: 8 }}>
+        <form
+          onSubmit={handleObtenerHistorial}
+          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+        >
           <input
             type="number"
             placeholder="ID animal"

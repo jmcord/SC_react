@@ -71,6 +71,8 @@ export function useAnimalTrace() {
     }
   }, []);
 
+  // ---------- Escrituras ----------
+
   const registrarAnimal = useCallback(
     async (id, especie, propietario) => {
       if (!contract) throw new Error("Contrato no inicializado");
@@ -161,6 +163,64 @@ export function useAnimalTrace() {
     [contract]
   );
 
+  // ---------- Asignar roles (solo ADMIN) ----------
+
+  const asignarVeterinario = useCallback(
+    async (address) => {
+      if (!contract) throw new Error("Contrato no inicializado");
+      setTxLoading(true);
+      setError(null);
+      try {
+        const tx = await contract.grantRole(VETERINARIO_ROLE, address);
+        await tx.wait();
+      } catch (e) {
+        console.error(e);
+        setError(e.reason || "Error al asignar rol VETERINARIO.");
+      } finally {
+        setTxLoading(false);
+      }
+    },
+    [contract]
+  );
+
+  const asignarTransportista = useCallback(
+    async (address) => {
+      if (!contract) throw new Error("Contrato no inicializado");
+      setTxLoading(true);
+      setError(null);
+      try {
+        const tx = await contract.grantRole(TRANSPORTISTA_ROLE, address);
+        await tx.wait();
+      } catch (e) {
+        console.error(e);
+        setError(e.reason || "Error al asignar rol TRANSPORTISTA.");
+      } finally {
+        setTxLoading(false);
+      }
+    },
+    [contract]
+  );
+
+  const asignarProductor = useCallback(
+    async (address) => {
+      if (!contract) throw new Error("Contrato no inicializado");
+      setTxLoading(true);
+      setError(null);
+      try {
+        const tx = await contract.grantRole(PRODUCTOR_ROLE, address);
+        await tx.wait();
+      } catch (e) {
+        console.error(e);
+        setError(e.reason || "Error al asignar rol PRODUCTOR.");
+      } finally {
+        setTxLoading(false);
+      }
+    },
+    [contract]
+  );
+
+  // ---------- Lecturas ----------
+
   const obtenerHistorial = useCallback(
     async (id) => {
       if (!contract) throw new Error("Contrato no inicializado");
@@ -216,5 +276,8 @@ export function useAnimalTrace() {
     registrarAlimentacion,
     obtenerHistorial,
     obtenerAnimal,
+    asignarVeterinario,
+    asignarTransportista,
+    asignarProductor,
   };
 }
