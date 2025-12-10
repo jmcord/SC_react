@@ -1,0 +1,295 @@
+// src/App.jsx
+import { useState } from "react";
+import { useAnimalTrace } from "./hooks/useAnimalTrace";
+
+function App() {
+  const {
+    account,
+    roles,
+    loading,
+    txLoading,
+    error,
+    connectWallet,
+    registrarAnimal,
+    registrarVacunacion,
+    registrarTransporte,
+    registrarAlimentacion,
+    obtenerHistorial,
+    obtenerAnimal,
+  } = useAnimalTrace();
+
+  const [nuevoAnimal, setNuevoAnimal] = useState({
+    id: "",
+    especie: "",
+    propietario: "",
+  });
+
+  const [evento, setEvento] = useState({
+    id: "",
+    descripcion: "",
+    fecha: "",
+    ipfsHash: "",
+    validadoIA: false,
+  });
+
+  const [historialId, setHistorialId] = useState("");
+  const [historial, setHistorial] = useState([]);
+
+  const [consultaId, setConsultaId] = useState("");
+  const [animalConsultado, setAnimalConsultado] = useState(null);
+
+  // ───── Handlers ─────
+
+  const handleRegistrarAnimal = async (e) => {
+    e.preventDefault();
+    if (!nuevoAnimal.id) return;
+    await registrarAnimal(
+      Number(nuevoAnimal.id),
+      nuevoAnimal.especie,
+      nuevoAnimal.propietario
+    );
+  };
+
+  const handleRegistrarVacunacion = async (e) => {
+    e.preventDefault();
+    if (!evento.id) return;
+    await registrarVacunacion(
+      Number(evento.id),
+      evento.descripcion,
+      evento.fecha,
+      evento.ipfsHash,
+      evento.validadoIA
+    );
+  };
+
+  const handleRegistrarTransporte = async (e) => {
+    e.preventDefault();
+    if (!evento.id) return;
+    await registrarTransporte(
+      Number(evento.id),
+      evento.descripcion,
+      evento.fecha,
+      evento.ipfsHash,
+      evento.validadoIA
+    );
+  };
+
+  const handleRegistrarAlimentacion = async (e) => {
+    e.preventDefault();
+    if (!evento.id) return;
+    await registrarAlimentacion(
+      Number(evento.id),
+      evento.descripcion,
+      evento.fecha,
+      evento.ipfsHash,
+      evento.validadoIA
+    );
+  };
+
+  const handleObtenerHistorial = async (e) => {
+    e.preventDefault();
+    if (!historialId) return;
+    const evs = await obtenerHistorial(Number(historialId));
+    setHistorial(evs);
+  };
+
+  const handleObtenerAnimal = async (e) => {
+    e.preventDefault();
+    if (!consultaId) return;
+    const a = await obtenerAnimal(Number(consultaId));
+    setAnimalConsultado(a);
+  };
+
+  // ───── UI ─────
+
+  return (
+    <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
+      <h1>🐮 AnimalDataTrace dApp</h1>
+      <p>Sepolia · AccessControl · Trazabilidad de eventos</p>
+
+      {/* Conexión */}
+      <section style={{ marginBottom: 20 }}>
+        {!account ? (
+          <button onClick={connectWallet} disabled={loading}>
+            {loading ? "Conectando..." : "Conectar MetaMask"}
+          </button>
+        ) : (
+          <>
+            <p>
+              Cuenta conectada: <b>{account}</b>
+            </p>
+            <p>
+              Roles →{" "}
+              Admin: {roles.isAdmin ? "✅" : "❌"} · Veterinario:{" "}
+              {roles.isVeterinario ? "✅" : "❌"} · Transportista:{" "}
+              {roles.isTransportista ? "✅" : "❌"} · Productor:{" "}
+              {roles.isProductor ? "✅" : "❌"}
+            </p>
+          </>
+        )}
+
+        {error && <p style={{ color: "red" }}>⚠ {error}</p>}
+      </section>
+
+      <hr />
+
+      {/* Registrar animal */}
+      <section style={{ marginTop: 20 }}>
+        <h2>1️⃣ Registrar animal (solo ADMIN)</h2>
+        <form onSubmit={handleRegistrarAnimal} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input
+            type="number"
+            placeholder="ID"
+            value={nuevoAnimal.id}
+            onChange={(e) =>
+              setNuevoAnimal({ ...nuevoAnimal, id: e.target.value })
+            }
+          />
+          <input
+            type="text"
+            placeholder="Especie"
+            value={nuevoAnimal.especie}
+            onChange={(e) =>
+              setNuevoAnimal({ ...nuevoAnimal, especie: e.target.value })
+            }
+          />
+          <input
+            type="text"
+            placeholder="Propietario"
+            value={nuevoAnimal.propietario}
+            onChange={(e) =>
+              setNuevoAnimal({ ...nuevoAnimal, propietario: e.target.value })
+            }
+          />
+          <button type="submit" disabled={txLoading}>
+            {txLoading ? "Enviando..." : "Registrar animal"}
+          </button>
+        </form>
+      </section>
+
+      <hr />
+
+      {/* Registrar eventos */}
+      <section style={{ marginTop: 20 }}>
+        <h2>2️⃣ Registrar eventos</h2>
+        <p>
+          Vacunación → requiere rol <b>VETERINARIO</b>. <br />
+          Transporte → requiere rol <b>TRANSPORTISTA</b>. <br />
+          Alimentación → requiere rol <b>PRODUCTOR</b>.
+        </p>
+
+        <form
+          style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 500 }}
+        >
+          <input
+            type="number"
+            placeholder="ID animal"
+            value={evento.id}
+            onChange={(e) => setEvento({ ...evento, id: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Descripción"
+            value={evento.descripcion}
+            onChange={(e) =>
+              setEvento({ ...evento, descripcion: e.target.value })
+            }
+          />
+          <input
+            type="text"
+            placeholder="Fecha (ej. 2025-12-10)"
+            value={evento.fecha}
+            onChange={(e) => setEvento({ ...evento, fecha: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="IPFS hash (opcional)"
+            value={evento.ipfsHash}
+            onChange={(e) =>
+              setEvento({ ...evento, ipfsHash: e.target.value })
+            }
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={evento.validadoIA}
+              onChange={(e) =>
+                setEvento({ ...evento, validadoIA: e.target.checked })
+              }
+            />{" "}
+            Validado por IA
+          </label>
+
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={handleRegistrarVacunacion} disabled={txLoading}>
+              {txLoading ? "Enviando..." : "Registrar vacunación"}
+            </button>
+            <button onClick={handleRegistrarTransporte} disabled={txLoading}>
+              {txLoading ? "Enviando..." : "Registrar transporte"}
+            </button>
+            <button onClick={handleRegistrarAlimentacion} disabled={txLoading}>
+              {txLoading ? "Enviando..." : "Registrar alimentación"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <hr />
+
+      {/* Consultar animal */}
+      <section style={{ marginTop: 20 }}>
+        <h2>3️⃣ Consultar datos de un animal</h2>
+        <form onSubmit={handleObtenerAnimal} style={{ display: "flex", gap: 8 }}>
+          <input
+            type="number"
+            placeholder="ID animal"
+            value={consultaId}
+            onChange={(e) => setConsultaId(e.target.value)}
+          />
+          <button type="submit">Consultar</button>
+        </form>
+
+        {animalConsultado && (
+          <div style={{ marginTop: 10 }}>
+            <p>
+              <b>ID:</b> {String(animalConsultado.id)} <br />
+              <b>Especie:</b> {animalConsultado.especie} <br />
+              <b>Propietario:</b> {animalConsultado.propietario} <br />
+              <b>Existe:</b> {animalConsultado.existe ? "Sí" : "No"}
+            </p>
+          </div>
+        )}
+      </section>
+
+      <hr />
+
+      {/* Historial */}
+      <section style={{ marginTop: 20, marginBottom: 40 }}>
+        <h2>4️⃣ Historial de eventos de un animal</h2>
+        <form onSubmit={handleObtenerHistorial} style={{ display: "flex", gap: 8 }}>
+          <input
+            type="number"
+            placeholder="ID animal"
+            value={historialId}
+            onChange={(e) => setHistorialId(e.target.value)}
+          />
+          <button type="submit">Ver historial</button>
+        </form>
+
+        <ul style={{ marginTop: 10 }}>
+          {historial.map((ev, idx) => (
+            <li key={idx} style={{ marginBottom: 8 }}>
+              <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
+              Resp: {ev.responsable} <br />
+              IPFS: {ev.ipfsHash || "-"} <br />
+              IA: {ev.validadoIA ? "✅" : "❌"}
+            </li>
+          ))}
+          {historial.length === 0 && <p>No hay eventos cargados.</p>}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+export default App;
