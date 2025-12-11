@@ -139,6 +139,31 @@ export function useAnimalTrace() {
     [contract]
   );
 
+    const registrarTransporteConMeteo = useCallback(
+    async (id, descripcion, fecha, ipfsHash, zona) => {
+        if (!contract) throw new Error("Contrato no inicializado");
+        setTxLoading(true);
+        setError(null);
+        try {
+        const tx = await contract.registrarTransporteConMeteo(
+            id,
+            descripcion,
+            fecha,
+            ipfsHash,
+            zona
+        );
+        await tx.wait();
+        } catch (e) {
+        console.error(e);
+        setError(e.reason || "Error al registrar transporte con meteo.");
+        } finally {
+        setTxLoading(false);
+        }
+    },
+    [contract]
+    );
+
+
   const registrarAlimentacion = useCallback(
     async (id, descripcion, fecha, ipfsHash, validadoIA) => {
       if (!contract) throw new Error("Contrato no inicializado");
@@ -221,27 +246,30 @@ export function useAnimalTrace() {
 
   // ---------- Lecturas ----------
 
-  const obtenerHistorial = useCallback(
+    const obtenerHistorial = useCallback(
     async (id) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      try {
+        if (!contract) throw new Error("Contrato no inicializado");
+        try {
         const eventos = await contract.obtenerHistorial(id);
         return eventos.map((ev) => ({
-          tipo: ev.tipo,
-          descripcion: ev.descripcion,
-          fecha: ev.fecha,
-          responsable: ev.responsable,
-          ipfsHash: ev.ipfsHash,
-          validadoIA: ev.validadoIA,
+            tipo: ev.tipo,
+            descripcion: ev.descripcion,
+            fecha: ev.fecha,
+            responsable: ev.responsable,
+            ipfsHash: ev.ipfsHash,
+            validadoIA: ev.validadoIA,
+            temperaturaExterior: ev.temperaturaExterior,
+            alertaMeteo: ev.alertaMeteo,
         }));
-      } catch (e) {
+        } catch (e) {
         console.error(e);
         setError(e.reason || "Error al obtener historial.");
         return [];
-      }
+        }
     },
     [contract]
-  );
+    );
+
 
   const obtenerAnimal = useCallback(
     async (id) => {
@@ -273,6 +301,7 @@ export function useAnimalTrace() {
     registrarAnimal,
     registrarVacunacion,
     registrarTransporte,
+    registrarTransporteConMeteo,
     registrarAlimentacion,
     obtenerHistorial,
     obtenerAnimal,

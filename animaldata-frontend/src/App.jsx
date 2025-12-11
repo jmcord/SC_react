@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useAnimalTrace } from "./hooks/useAnimalTrace";
 
+import Footer from "./components/Footer";
+
+
 function App() {
   const {
     account,
@@ -13,6 +16,7 @@ function App() {
     registrarAnimal,
     registrarVacunacion,
     registrarTransporte,
+    registrarTransporteConMeteo,
     registrarAlimentacion,
     obtenerHistorial,
     obtenerAnimal,
@@ -360,16 +364,24 @@ function App() {
 
         <ul style={{ marginTop: 10 }}>
           {historial.map((ev, idx) => (
-            <li key={idx} style={{ marginBottom: 8 }}>
-              <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
-              Resp: {ev.responsable} <br />
-              IPFS: {ev.ipfsHash || "-"} <br />
-              IA: {ev.validadoIA ? "✅" : "❌"}
-            </li>
+          <li key={idx} style={{ marginBottom: 8 }}>
+            <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
+            Resp: {ev.responsable} <br />
+            IPFS: {ev.ipfsHash || "-"} <br />
+            IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
+            {ev.temperaturaExterior !== undefined && (
+              <>
+                Temperatura exterior: {String(ev.temperaturaExterior)} ºC <br />
+                Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
+              </>
+            )}
+          </li>
+
           ))}
           {historial.length === 0 && <p>No hay eventos cargados.</p>}
         </ul>
       </section>
+      <Footer />
     </div>
   );
 }

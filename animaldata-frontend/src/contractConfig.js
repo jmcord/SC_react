@@ -1,8 +1,9 @@
-export const CONTRACT_ADDRESS = "0x6ee16335854b48059c9b30C0F13e18D7544C851d";
+export const CONTRACT_ADDRESS = "0xe272464EdBe0B150D9ac25763e16Df4518CD8b0B";
 
 // src/contractConfig.js
 
 export const CONTRACT_ABI = [
+
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -28,6 +29,39 @@ export const CONTRACT_ABI = [
 		],
 		"name": "AccessControlUnauthorizedAccount",
 		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_indexEvento",
+				"type": "uint256"
+			},
+			{
+				"internalType": "int256",
+				"name": "_temperatura",
+				"type": "int256"
+			},
+			{
+				"internalType": "bool",
+				"name": "_alerta",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "_ok",
+				"type": "bool"
+			}
+		],
+		"name": "completarValidacionMeteo",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -184,6 +218,39 @@ export const CONTRACT_ABI = [
 				"type": "string"
 			},
 			{
+				"internalType": "string",
+				"name": "_zona",
+				"type": "string"
+			}
+		],
+		"name": "registrarTransporteConMeteo",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_descripcion",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_fecha",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_ipfsHash",
+				"type": "string"
+			},
+			{
 				"internalType": "bool",
 				"name": "_validadoIA",
 				"type": "bool"
@@ -303,6 +370,74 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"name": "RoleRevoked",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "animalId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "indexEvento",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "int256",
+				"name": "temperatura",
+				"type": "int256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "alerta",
+				"type": "bool"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "ok",
+				"type": "bool"
+			}
+		],
+		"name": "ValidacionMeteoCompletada",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "animalId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "indexEvento",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "zona",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "fecha",
+				"type": "string"
+			}
+		],
+		"name": "ValidacionMeteoSolicitada",
 		"type": "event"
 	},
 	{
@@ -458,6 +593,16 @@ export const CONTRACT_ABI = [
 								"internalType": "bool",
 								"name": "validadoIA",
 								"type": "bool"
+							},
+							{
+								"internalType": "int256",
+								"name": "temperaturaExterior",
+								"type": "int256"
+							},
+							{
+								"internalType": "bool",
+								"name": "alertaMeteo",
+								"type": "bool"
 							}
 						],
 						"internalType": "struct AnimalDataTrace.Evento[]",
@@ -514,11 +659,34 @@ export const CONTRACT_ABI = [
 						"internalType": "bool",
 						"name": "validadoIA",
 						"type": "bool"
+					},
+					{
+						"internalType": "int256",
+						"name": "temperaturaExterior",
+						"type": "int256"
+					},
+					{
+						"internalType": "bool",
+						"name": "alertaMeteo",
+						"type": "bool"
 					}
 				],
 				"internalType": "struct AnimalDataTrace.Evento[]",
 				"name": "",
 				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "ORACLE_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
 			}
 		],
 		"stateMutability": "view",
@@ -582,4 +750,5 @@ export const CONTRACT_ABI = [
 		"stateMutability": "view",
 		"type": "function"
 	}
+
 ];
