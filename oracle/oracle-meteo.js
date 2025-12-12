@@ -1,67 +1,117 @@
-// oracle/oracle-meteo.js
 import "dotenv/config";
 import { ethers } from "ethers";
 import fetch from "node-fetch";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "./contractConfig.js";
 
-const RPC_URL = process.env.RPC_URL;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const apiKey = process.env.OPENWEATHER_API_KEY;
-if (!apiKey) {
-  throw new Error("Falta OPENWEATHER_API_KEY en .env");
+// ─────────────────────────────────────────────
+// Provider + Wallet
+// ─────────────────────────────────────────────
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const contract = new ethers.Contract(
+  CONTRACT_ADDRESS,
+  CONTRACT_ABI,
+  wallet
+);
+
+console.log("🛰 Oráculo meteo iniciado");
+console.log("Bot address:", wallet.address);
+
+// ─────────────────────────────────────────────
+// Geocoding: zona → lat/lon
+// ─────────────────────────────────────────────
+async function geocode(zona) {
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  if (!apiKey) throw new Error("Falta OPENWEATHER_API_KEY");
+
+  const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+    zona
+  )}&limit=1&appid=${apiKey}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Geocoding error ${res.status}`);
+  }
+
+  const data = await res.json();
+  if (!data.length) {
+    throw new Error(`No se pudo geocodificar zona: ${zona}`);
+  }
+
+  return {
+    lat: data[0].lat,
+    lon: data[0].lon,
+  };
 }
 
+// ─────────────────────────────────────────────
+// Meteo real (One Call 3.0)
+// ─────────────────────────────────────────────
+async function obtenerMeteo(zona) {
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  if (!apiKey) throw new Error("Falta OPENWEATHER_API_KEY");
 
-if (!RPC_URL || !PRIVATE_KEY) {
-  console.error("Faltan RPC_URL o PRIVATE_KEY en .env");
-  process.exit(1);
-}
+  const { lat, lon } = await geocode(zona);
 
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
+  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+  const res = await fetch(url);
 
-async function obtenerMeteo(zona, fecha) {
-  console.log(`Llamando API meteo (mock) para zona="${zona}", fecha="${fecha}"`);
-  const temperatura = 28;
-  const alerta = false;
-  const ok = true;
+  if (!res.ok) {
+    throw new Error(`OneCall error ${res.status}`);
+  }
+
+  const data = await res.json();
+
+  const temperatura = Math.round(data.current.temp);
+
+  const alertaAPI =
+    Array.isArray(data.alerts) && data.alerts.length > 0;
+
+  const alertaTemp = temperatura >= 32 || temperatura <= 0;
+
+  const alerta = alertaAPI || alertaTemp;
+  const ok = !alerta;
+
   return { temperatura, alerta, ok };
 }
 
-async function main() {
-  console.log("Oráculo meteo escuchando en Sepolia...");
-  console.log("Bot address:", await wallet.getAddress());
+// ─────────────────────────────────────────────
+// Listener del contrato
+// ─────────────────────────────────────────────
+contract.on(
+  "ValidacionMeteoSolicitada",
+  async (animalId, indexEvento, zona, fecha) => {
+    console.log("🛰 Solicitud meteo:", {
+      animalId: animalId.toString(),
+      indexEvento: indexEvento.toString(),
+      zona,
+      fecha,
+    });
 
-  contract.on(
-    "ValidacionMeteoSolicitada",
-    async (animalId, indexEvento, zona, fecha, event) => {
-      try {
-        console.log("🛰  Solicitud meteo:", {
-          animalId: animalId.toString(),
-          indexEvento: indexEvento.toString(),
-          zona,
-          fecha,
-        });
+    try {
+      const { temperatura, alerta, ok } = await obtenerMeteo(zona);
 
-        const { temperatura, alerta, ok } = await obtenerMeteo(zona, fecha);
+      console.log("🌦 Meteo real:", {
+        temperatura,
+        alerta,
+        ok,
+      });
 
-        const tx = await contract.completarValidacionMeteo(
-          animalId,
-          indexEvento,
-          temperatura,
-          alerta,
-          ok
-        );
+      const tx = await contract.completarValidacionMeteo(
+        animalId,
+        indexEvento,
+        temperatura,
+        alerta,
+        ok
+      );
 
-        console.log("   → Tx enviada:", tx.hash);
-        await tx.wait();
-        console.log("   → Validación meteo completada ✅");
-      } catch (err) {
-        console.error("   ✖ Error procesando solicitud meteo:", err);
-      }
+      console.log("→ Tx enviada:", tx.hash);
+      await tx.wait();
+      console.log("→ Validación meteo completada ✅");
+    } catch (err) {
+      console.error("❌ Error en oráculo:", err.message);
     }
-  );
-}
+  }
+);
 
-main().catch(console.error);
+console.log("👂 Escuchando eventos ValidacionMeteoSolicitada...");

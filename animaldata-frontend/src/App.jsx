@@ -329,7 +329,7 @@ function App() {
               onClick={handleRegistrarTransporteConMeteo}
               disabled={txLoading}
             >
-              {txLoading ? "Enviando..." : "Transporte con meteo (mock)"}
+              {txLoading ? "Enviando..." : "Transporte con meteo OpenWeatherOneCall"}
             </button>
             <button onClick={handleRegistrarAlimentacion} disabled={txLoading}>
               {txLoading ? "Enviando..." : "Registrar alimentación"}
