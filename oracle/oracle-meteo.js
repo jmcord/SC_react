@@ -6,6 +6,11 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI } from "./contractConfig.js";
 
 const RPC_URL = process.env.RPC_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const apiKey = process.env.OPENWEATHER_API_KEY;
+if (!apiKey) {
+  throw new Error("Falta OPENWEATHER_API_KEY en .env");
+}
+
 
 if (!RPC_URL || !PRIVATE_KEY) {
   console.error("Faltan RPC_URL o PRIVATE_KEY en .env");
