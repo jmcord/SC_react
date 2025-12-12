@@ -8,6 +8,7 @@ const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
 const VETERINARIO_ROLE = ethers.id("VETERINARIO_ROLE");
 const TRANSPORTISTA_ROLE = ethers.id("TRANSPORTISTA_ROLE");
 const PRODUCTOR_ROLE = ethers.id("PRODUCTOR_ROLE");
+const ORACLE_ROLE = ethers.id("ORACLE_ROLE");
 
 export function useAnimalTrace() {
   const [account, setAccount] = useState(null);
@@ -17,6 +18,7 @@ export function useAnimalTrace() {
     isVeterinario: false,
     isTransportista: false,
     isProductor: false,
+    isOracle: false,
   });
   const [loading, setLoading] = useState(false);
   const [txLoading, setTxLoading] = useState(false);
@@ -49,12 +51,12 @@ export function useAnimalTrace() {
       const instance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       setContract(instance);
 
-      // leer roles con hasRole
-      const [isAdmin, isVet, isTransp, isProd] = await Promise.all([
+      const [isAdmin, isVet, isTransp, isProd, isOracle] = await Promise.all([
         instance.hasRole(DEFAULT_ADMIN_ROLE, addr),
         instance.hasRole(VETERINARIO_ROLE, addr),
         instance.hasRole(TRANSPORTISTA_ROLE, addr),
         instance.hasRole(PRODUCTOR_ROLE, addr),
+        instance.hasRole(ORACLE_ROLE, addr),
       ]);
 
       setRoles({
@@ -62,6 +64,7 @@ export function useAnimalTrace() {
         isVeterinario: isVet,
         isTransportista: isTransp,
         isProductor: isProd,
+        isOracle,
       });
     } catch (e) {
       console.error(e);
@@ -139,30 +142,30 @@ export function useAnimalTrace() {
     [contract]
   );
 
-    const registrarTransporteConMeteo = useCallback(
+  // 🚚 Nueva función: transporte + meteo (mock oráculo)
+  const registrarTransporteConMeteo = useCallback(
     async (id, descripcion, fecha, ipfsHash, zona) => {
-        if (!contract) throw new Error("Contrato no inicializado");
-        setTxLoading(true);
-        setError(null);
-        try {
+      if (!contract) throw new Error("Contrato no inicializado");
+      setTxLoading(true);
+      setError(null);
+      try {
         const tx = await contract.registrarTransporteConMeteo(
-            id,
-            descripcion,
-            fecha,
-            ipfsHash,
-            zona
+          id,
+          descripcion,
+          fecha,
+          ipfsHash,
+          zona
         );
         await tx.wait();
-        } catch (e) {
+      } catch (e) {
         console.error(e);
         setError(e.reason || "Error al registrar transporte con meteo.");
-        } finally {
+      } finally {
         setTxLoading(false);
-        }
+      }
     },
     [contract]
-    );
-
+  );
 
   const registrarAlimentacion = useCallback(
     async (id, descripcion, fecha, ipfsHash, validadoIA) => {
@@ -188,7 +191,53 @@ export function useAnimalTrace() {
     [contract]
   );
 
-  // ---------- Asignar roles (solo ADMIN) ----------
+  // ---------- Lecturas ----------
+
+  const obtenerHistorial = useCallback(
+    async (id) => {
+      if (!contract) throw new Error("Contrato no inicializado");
+      try {
+        const eventos = await contract.obtenerHistorial(id);
+        return eventos.map((ev) => ({
+          tipo: ev.tipo,
+          descripcion: ev.descripcion,
+          fecha: ev.fecha,
+          responsable: ev.responsable,
+          ipfsHash: ev.ipfsHash,
+          validadoIA: ev.validadoIA,
+          temperaturaExterior: ev.temperaturaExterior,
+          alertaMeteo: ev.alertaMeteo,
+        }));
+      } catch (e) {
+        console.error(e);
+        setError(e.reason || "Error al obtener historial.");
+        return [];
+      }
+    },
+    [contract]
+  );
+
+  const obtenerAnimal = useCallback(
+    async (id) => {
+      if (!contract) throw new Error("Contrato no inicializado");
+      try {
+        const a = await contract.obtenerAnimal(id);
+        return {
+          id: a.id,
+          especie: a.especie,
+          propietario: a.propietario,
+          existe: a.existe,
+        };
+      } catch (e) {
+        console.error(e);
+        setError(e.reason || "Error al obtener animal.");
+        return null;
+      }
+    },
+    [contract]
+  );
+
+  // ---------- Roles extra: asignar (igual que antes) ----------
 
   const asignarVeterinario = useCallback(
     async (address) => {
@@ -244,52 +293,24 @@ export function useAnimalTrace() {
     [contract]
   );
 
-  // ---------- Lecturas ----------
-
-    const obtenerHistorial = useCallback(
-    async (id) => {
+    const asignarOracle = useCallback(
+    async (address) => {
         if (!contract) throw new Error("Contrato no inicializado");
+        setTxLoading(true);
+        setError(null);
         try {
-        const eventos = await contract.obtenerHistorial(id);
-        return eventos.map((ev) => ({
-            tipo: ev.tipo,
-            descripcion: ev.descripcion,
-            fecha: ev.fecha,
-            responsable: ev.responsable,
-            ipfsHash: ev.ipfsHash,
-            validadoIA: ev.validadoIA,
-            temperaturaExterior: ev.temperaturaExterior,
-            alertaMeteo: ev.alertaMeteo,
-        }));
+        const tx = await contract.grantRole(ORACLE_ROLE, address);
+        await tx.wait();
         } catch (e) {
         console.error(e);
-        setError(e.reason || "Error al obtener historial.");
-        return [];
+        setError(e.reason || "Error al asignar rol ORACLE.");
+        } finally {
+        setTxLoading(false);
         }
     },
     [contract]
     );
 
-
-  const obtenerAnimal = useCallback(
-    async (id) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      try {
-        const a = await contract.obtenerAnimal(id);
-        return {
-          id: a.id,
-          especie: a.especie,
-          propietario: a.propietario,
-          existe: a.existe,
-        };
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al obtener animal.");
-        return null;
-      }
-    },
-    [contract]
-  );
 
   return {
     account,
@@ -308,5 +329,6 @@ export function useAnimalTrace() {
     asignarVeterinario,
     asignarTransportista,
     asignarProductor,
+    asignarOracle,
   };
 }

@@ -2,9 +2,6 @@
 import { useState } from "react";
 import { useAnimalTrace } from "./hooks/useAnimalTrace";
 
-import Footer from "./components/Footer";
-
-
 function App() {
   const {
     account,
@@ -23,6 +20,7 @@ function App() {
     asignarVeterinario,
     asignarTransportista,
     asignarProductor,
+    asignarOracle,
   } = useAnimalTrace();
 
   const [nuevoAnimal, setNuevoAnimal] = useState({
@@ -37,6 +35,7 @@ function App() {
     fecha: "",
     ipfsHash: "",
     validadoIA: false,
+    zona: "", // 🆕 zona para meteo
   });
 
   const [historialId, setHistorialId] = useState("");
@@ -86,6 +85,18 @@ function App() {
     );
   };
 
+  const handleRegistrarTransporteConMeteo = async (e) => {
+    e.preventDefault();
+    if (!evento.id) return;
+    await registrarTransporteConMeteo(
+      Number(evento.id),
+      evento.descripcion,
+      evento.fecha,
+      evento.ipfsHash,
+      evento.zona
+    );
+  };
+
   const handleRegistrarAlimentacion = async (e) => {
     e.preventDefault();
     if (!evento.id) return;
@@ -122,6 +133,8 @@ function App() {
       await asignarTransportista(nuevoRol.address);
     } else if (nuevoRol.role === "PRODUCTOR") {
       await asignarProductor(nuevoRol.address);
+    } else if (nuevoRol.role === "ORACLE") {
+    await asignarOracle(nuevoRol.address); // 🆕
     }
   };
 
@@ -130,7 +143,7 @@ function App() {
   return (
     <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
       <h1>🐮 AnimalDataTrace dApp</h1>
-      <p>Sepolia · AccessControl · Trazabilidad de eventos</p>
+      <p>Sepolia · AccessControl · Trazabilidad + Meteo</p>
 
       {/* Conexión */}
       <section style={{ marginBottom: 20 }}>
@@ -147,7 +160,8 @@ function App() {
               Roles → Admin: {roles.isAdmin ? "✅" : "❌"} · Veterinario:{" "}
               {roles.isVeterinario ? "✅" : "❌"} · Transportista:{" "}
               {roles.isTransportista ? "✅" : "❌"} · Productor:{" "}
-              {roles.isProductor ? "✅" : "❌"}
+              {roles.isProductor ? "✅" : "❌"} · Oráculo:{" "}
+              {roles.isOracle ? "✅" : "❌"}
             </p>
           </>
         )}
@@ -179,6 +193,7 @@ function App() {
                 <option value="VETERINARIO">VETERINARIO</option>
                 <option value="TRANSPORTISTA">TRANSPORTISTA</option>
                 <option value="PRODUCTOR">PRODUCTOR</option>
+                <option value="ORACLE">ORACLE</option>
               </select>
 
               <input
@@ -195,10 +210,6 @@ function App() {
                 {txLoading ? "Enviando..." : "Asignar rol"}
               </button>
             </form>
-            <p style={{ fontSize: 12, marginTop: 4 }}>
-              Solo la cuenta con DEFAULT_ADMIN_ROLE (deployer) puede asignar
-              roles.
-            </p>
           </section>
         </>
       )}
@@ -250,6 +261,7 @@ function App() {
         <p>
           Vacunación → requiere rol <b>VETERINARIO</b>. <br />
           Transporte → requiere rol <b>TRANSPORTISTA</b>. <br />
+          Transporte + meteo → rol <b>TRANSPORTISTA</b> + luego ORACLE. <br />
           Alimentación → requiere rol <b>PRODUCTOR</b>.
         </p>
 
@@ -289,6 +301,12 @@ function App() {
               setEvento({ ...evento, ipfsHash: e.target.value })
             }
           />
+          <input
+            type="text"
+            placeholder="Zona meteo (ej. Sevilla, ES)"
+            value={evento.zona}
+            onChange={(e) => setEvento({ ...evento, zona: e.target.value })}
+          />
           <label>
             <input
               type="checkbox"
@@ -297,15 +315,21 @@ function App() {
                 setEvento({ ...evento, validadoIA: e.target.checked })
               }
             />{" "}
-            Validado por IA
+            Validado por IA (manual)
           </label>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
             <button onClick={handleRegistrarVacunacion} disabled={txLoading}>
               {txLoading ? "Enviando..." : "Registrar vacunación"}
             </button>
             <button onClick={handleRegistrarTransporte} disabled={txLoading}>
               {txLoading ? "Enviando..." : "Registrar transporte"}
+            </button>
+            <button
+              onClick={handleRegistrarTransporteConMeteo}
+              disabled={txLoading}
+            >
+              {txLoading ? "Enviando..." : "Transporte con meteo (mock)"}
             </button>
             <button onClick={handleRegistrarAlimentacion} disabled={txLoading}>
               {txLoading ? "Enviando..." : "Registrar alimentación"}
@@ -364,24 +388,24 @@ function App() {
 
         <ul style={{ marginTop: 10 }}>
           {historial.map((ev, idx) => (
-          <li key={idx} style={{ marginBottom: 8 }}>
-            <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
-            Resp: {ev.responsable} <br />
-            IPFS: {ev.ipfsHash || "-"} <br />
-            IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
-            {ev.temperaturaExterior !== undefined && (
-              <>
-                Temperatura exterior: {String(ev.temperaturaExterior)} ºC <br />
-                Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
-              </>
-            )}
-          </li>
-
+            <li key={idx} style={{ marginBottom: 12 }}>
+              <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
+              Resp: {ev.responsable} <br />
+              IPFS: {ev.ipfsHash || "-"} <br />
+              IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
+              {/* Datos meteo */}
+              {ev.temperaturaExterior !== undefined && (
+                <>
+                  Temperatura exterior:{" "}
+                  {String(ev.temperaturaExterior)} ºC <br />
+                  Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
+                </>
+              )}
+            </li>
           ))}
           {historial.length === 0 && <p>No hay eventos cargados.</p>}
         </ul>
       </section>
-      <Footer />
     </div>
   );
 }
