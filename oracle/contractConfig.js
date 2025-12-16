@@ -4,8 +4,20 @@ export const CONTRACT_ADDRESS = "0xe272464EdBe0B150D9ac25763e16Df4518CD8b0B";
 
 export const CONTRACT_ABI = [
 
+	
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_animalDataTrace",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "admin",
+				"type": "address"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -29,273 +41,6 @@ export const CONTRACT_ABI = [
 		],
 		"name": "AccessControlUnauthorizedAccount",
 		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_indexEvento",
-				"type": "uint256"
-			},
-			{
-				"internalType": "int256",
-				"name": "_temperatura",
-				"type": "int256"
-			},
-			{
-				"internalType": "bool",
-				"name": "_alerta",
-				"type": "bool"
-			},
-			{
-				"internalType": "bool",
-				"name": "_ok",
-				"type": "bool"
-			}
-		],
-		"name": "completarValidacionMeteo",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "id",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "tipo",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "responsable",
-				"type": "address"
-			}
-		],
-		"name": "EventoRegistrado",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "role",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "grantRole",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "_descripcion",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_fecha",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_ipfsHash",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "_validadoIA",
-				"type": "bool"
-			}
-		],
-		"name": "registrarAlimentacion",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "_especie",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_propietario",
-				"type": "string"
-			}
-		],
-		"name": "registrarAnimal",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "_descripcion",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_fecha",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_ipfsHash",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "_validadoIA",
-				"type": "bool"
-			}
-		],
-		"name": "registrarTransporte",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "_descripcion",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_fecha",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_ipfsHash",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_zona",
-				"type": "string"
-			}
-		],
-		"name": "registrarTransporteConMeteo",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "_descripcion",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_fecha",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_ipfsHash",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "_validadoIA",
-				"type": "bool"
-			}
-		],
-		"name": "registrarVacunacion",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "role",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "callerConfirmation",
-				"type": "address"
-			}
-		],
-		"name": "renounceRole",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "role",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "revokeRole",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -373,102 +118,13 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "animalId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "indexEvento",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "int256",
-				"name": "temperatura",
-				"type": "int256"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "alerta",
-				"type": "bool"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "ok",
-				"type": "bool"
-			}
-		],
-		"name": "ValidacionMeteoCompletada",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "animalId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "indexEvento",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "zona",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "fecha",
-				"type": "string"
-			}
-		],
-		"name": "ValidacionMeteoSolicitada",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "animales",
+		"inputs": [],
+		"name": "BOT_ROLE",
 		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "especie",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "propietario",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "existe",
-				"type": "bool"
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
 			}
 		],
 		"stateMutability": "view",
@@ -485,6 +141,32 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "animalDataTrace",
+		"outputs": [
+			{
+				"internalType": "contract AnimalDataTrace",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "bot",
+				"type": "address"
+			}
+		],
+		"name": "asignarBot",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -519,6 +201,24 @@ export const CONTRACT_ABI = [
 				"type": "address"
 			}
 		],
+		"name": "grantRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
 		"name": "hasRole",
 		"outputs": [
 			{
@@ -533,89 +233,19 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "_id",
-				"type": "uint256"
-			}
-		],
-		"name": "obtenerAnimal",
-		"outputs": [
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
 			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "especie",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "propietario",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "existe",
-						"type": "bool"
-					},
-					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "tipo",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "descripcion",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "fecha",
-								"type": "string"
-							},
-							{
-								"internalType": "address",
-								"name": "responsable",
-								"type": "address"
-							},
-							{
-								"internalType": "string",
-								"name": "ipfsHash",
-								"type": "string"
-							},
-							{
-								"internalType": "bool",
-								"name": "validadoIA",
-								"type": "bool"
-							},
-							{
-								"internalType": "int256",
-								"name": "temperaturaExterior",
-								"type": "int256"
-							},
-							{
-								"internalType": "bool",
-								"name": "alertaMeteo",
-								"type": "bool"
-							}
-						],
-						"internalType": "struct AnimalDataTrace.Evento[]",
-						"name": "historial",
-						"type": "tuple[]"
-					}
-				],
-				"internalType": "struct AnimalDataTrace.Animal",
-				"name": "",
-				"type": "tuple"
+				"internalType": "address",
+				"name": "callerConfirmation",
+				"type": "address"
 			}
 		],
-		"stateMutability": "view",
+		"name": "renounceRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -624,85 +254,85 @@ export const CONTRACT_ABI = [
 				"internalType": "uint256",
 				"name": "_id",
 				"type": "uint256"
-			}
-		],
-		"name": "obtenerHistorial",
-		"outputs": [
+			},
 			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "tipo",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "descripcion",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "fecha",
-						"type": "string"
-					},
-					{
-						"internalType": "address",
-						"name": "responsable",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "ipfsHash",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "validadoIA",
-						"type": "bool"
-					},
-					{
-						"internalType": "int256",
-						"name": "temperaturaExterior",
-						"type": "int256"
-					},
-					{
-						"internalType": "bool",
-						"name": "alertaMeteo",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct AnimalDataTrace.Evento[]",
-				"name": "",
-				"type": "tuple[]"
+				"internalType": "uint256",
+				"name": "_indexEvento",
+				"type": "uint256"
+			},
+			{
+				"internalType": "int256",
+				"name": "_temperatura",
+				"type": "int256"
+			},
+			{
+				"internalType": "bool",
+				"name": "_alerta",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "_ok",
+				"type": "bool"
 			}
 		],
-		"stateMutability": "view",
+		"name": "reportarMeteo",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "ORACLE_ROLE",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_indexEvento",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_ipfsMeteoHash",
+				"type": "string"
 			}
 		],
-		"stateMutability": "view",
+		"name": "reportarMeteoCID",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "PRODUCTOR_ROLE",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
+				"internalType": "address",
+				"name": "bot",
+				"type": "address"
 			}
 		],
-		"stateMutability": "view",
+		"name": "revocarBot",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "revokeRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -719,32 +349,6 @@ export const CONTRACT_ABI = [
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "TRANSPORTISTA_ROLE",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "VETERINARIO_ROLE",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
 			}
 		],
 		"stateMutability": "view",

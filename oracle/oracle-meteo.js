@@ -272,7 +272,7 @@ async function recoveryScan() {
   const latest = await provider.getBlockNumber();
   const start = Number(process.env.START_BLOCK || 0);
 
-  const fromBlock = Math.max(state.lastProcessedBlock + 1, start);
+  let fromBlock = Math.max(state.lastProcessedBlock + 1, start);
   const toBlock = latest;
 
   if (fromBlock > toBlock) {
@@ -280,30 +280,50 @@ async function recoveryScan() {
     return;
   }
 
-  console.log(`🧠 Recovery scan: ${fromBlock} → ${toBlock}`);
+  const STEP = 10; // Alchemy Free tier limit
+
+  console.log(`🧠 Recovery scan (chunked): ${fromBlock} → ${toBlock} (step=${STEP})`);
 
   const filter = animalTrace.filters.ValidacionMeteoSolicitada();
-  const logs = await animalTrace.queryFilter(filter, fromBlock, toBlock);
 
-  for (const log of logs) {
-    const { animalId, indexEvento, zona, fecha } = log.args;
+  while (fromBlock <= toBlock) {
+    const end = Math.min(fromBlock + STEP - 1, toBlock);
+
     try {
-      await procesarSolicitud({
-        animalId,
-        indexEvento,
-        zona,
-        fecha,
-        requestedTx: log.transactionHash,
-        requestedBlock: log.blockNumber,
-      });
+      const logs = await animalTrace.queryFilter(filter, fromBlock, end);
+
+      for (const log of logs) {
+        const { animalId, indexEvento, zona, fecha } = log.args;
+
+        try {
+          await procesarSolicitud({
+            animalId,
+            indexEvento,
+            zona,
+            fecha,
+            requestedTx: log.transactionHash,
+            requestedBlock: log.blockNumber,
+          });
+        } catch (err) {
+          console.error("❌ Error procesando log (recovery):", err.message);
+        }
+      }
+
+      // Guarda progreso por chunk (así si se cae, reanuda casi donde iba)
+      saveState({ lastProcessedBlock: end });
     } catch (err) {
-      console.error("❌ Error procesando log (recovery):", err.message);
+      // Si por lo que sea Alchemy cambia el límite o hay rate limit, lo verás aquí
+      console.error(`❌ Error eth_getLogs chunk ${fromBlock}-${end}:`, err?.shortMessage || err?.message);
+      // Avanza igual 10 bloques para no quedarte bloqueado (opcional)
+      saveState({ lastProcessedBlock: end });
     }
+
+    fromBlock = end + 1;
   }
 
-  saveState({ lastProcessedBlock: toBlock });
   console.log("🧠 Recovery finalizado. lastProcessedBlock =", toBlock);
 }
+
 
 // ─────────────────────────────────────────────
 // Main
