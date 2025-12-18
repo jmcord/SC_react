@@ -2,8 +2,6 @@
 import { useState } from "react";
 import { useAnimalTrace } from "./hooks/useAnimalTrace";
 
-import "./index.css";
-
 
 function App() {
   const {
