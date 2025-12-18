@@ -1,7 +1,8 @@
 // src/hooks/useAnimalTrace.js
 import { useState, useCallback } from "react";
 import { ethers } from "ethers";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contractConfig";
+import AnimalDataTrace from "../contracts/AnimalDataTrace.json";
+
 
 const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
 const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
@@ -48,7 +49,12 @@ export function useAnimalTrace() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const instance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const instance = new ethers.Contract(
+        AnimalDataTrace.address,
+        AnimalDataTrace.abi,
+        signer
+      );
+
       setContract(instance);
 
       const [isAdmin, isVet, isTransp, isProd, isOracle] = await Promise.all([
@@ -207,6 +213,7 @@ export function useAnimalTrace() {
           validadoIA: ev.validadoIA,
           temperaturaExterior: ev.temperaturaExterior,
           alertaMeteo: ev.alertaMeteo,
+          ipfsMeteoHash: ev.ipfsMeteoHash ?? "", // ✅ si existe en el contrato
         }));
       } catch (e) {
         console.error(e);
@@ -216,6 +223,7 @@ export function useAnimalTrace() {
     },
     [contract]
   );
+
 
   const obtenerAnimal = useCallback(
     async (id) => {

@@ -134,7 +134,7 @@ function App() {
     } else if (nuevoRol.role === "PRODUCTOR") {
       await asignarProductor(nuevoRol.address);
     } else if (nuevoRol.role === "ORACLE") {
-    await asignarOracle(nuevoRol.address); // 🆕
+      await asignarOracle(nuevoRol.address);
     }
   };
 
@@ -387,22 +387,25 @@ function App() {
         </form>
 
         <ul style={{ marginTop: 10 }}>
-          {historial.map((ev, idx) => (
-            <li key={idx} style={{ marginBottom: 12 }}>
-              <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
-              Resp: {ev.responsable} <br />
-              IPFS: {ev.ipfsHash || "-"} <br />
-              IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
-              {/* Datos meteo */}
-              {ev.temperaturaExterior !== undefined && (
-                <>
-                  Temperatura exterior:{" "}
-                  {String(ev.temperaturaExterior)} ºC <br />
-                  Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
-                </>
-              )}
-            </li>
-          ))}
+          {historial.map((ev, idx) => {
+            const ipfsToShow = ev.ipfsMeteoHash || ev.ipfsHash || "-";
+
+            return (
+              <li key={idx} style={{ marginBottom: 12 }}>
+                <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
+                Resp: {ev.responsable} <br />
+                IPFS: {ipfsToShow} <br />
+                IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
+                {/* Datos meteo */}
+                {ev.temperaturaExterior !== undefined && (
+                  <>
+                    Temperatura exterior: {String(ev.temperaturaExterior)} ºC <br />
+                    Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
+                  </>
+                )}
+              </li>
+            );
+          })}
           {historial.length === 0 && <p>No hay eventos cargados.</p>}
         </ul>
       </section>
