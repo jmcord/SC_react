@@ -5,7 +5,13 @@ import { useAnimalTrace } from "./hooks/useAnimalTrace";
 function App() {
   const {
     account,
-    roles,
+    roles = {
+      isAdmin: false,
+      isVeterinario: false,
+      isTransportista: false,
+      isProductor: false,
+      isOracle: false,
+    },
     loading,
     txLoading,
     error,

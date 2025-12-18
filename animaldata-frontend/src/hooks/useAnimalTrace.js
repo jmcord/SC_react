@@ -1,161 +1,180 @@
 // src/hooks/useAnimalTrace.js
-import { useState, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import AnimalDataTrace from "../contracts/AnimalDataTrace.json";
 
-
-const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
-const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
-const VETERINARIO_ROLE = ethers.id("VETERINARIO_ROLE");
-const TRANSPORTISTA_ROLE = ethers.id("TRANSPORTISTA_ROLE");
-const PRODUCTOR_ROLE = ethers.id("PRODUCTOR_ROLE");
-const ORACLE_ROLE = ethers.id("ORACLE_ROLE");
+const EMPTY_ROLES = {
+  isAdmin: false,
+  isVeterinario: false,
+  isTransportista: false,
+  isProductor: false,
+  isOracle: false,
+};
 
 export function useAnimalTrace() {
+  // ─────────────────────────────────────────
+  // 1️⃣ ESTADOS
+  // ─────────────────────────────────────────
   const [account, setAccount] = useState(null);
-  const [contract, setContract] = useState(null);
-  const [roles, setRoles] = useState({
-    isAdmin: false,
-    isVeterinario: false,
-    isTransportista: false,
-    isProductor: false,
-    isOracle: false,
-  });
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+
+  const [roles, setRoles] = useState(EMPTY_ROLES);
+
   const [loading, setLoading] = useState(false);
   const [txLoading, setTxLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ─────────────────────────────────────────
+  // 2️⃣ CONECTAR WALLET (manual)
+  // ─────────────────────────────────────────
   const connectWallet = useCallback(async () => {
+    if (!window.ethereum) {
+      setError("MetaMask no disponible");
+      return;
+    }
+
     try {
-      setLoading(true);
       setError(null);
+      setLoading(true);
 
-      if (!window.ethereum) {
-        setError("MetaMask no está instalado.");
-        return;
-      }
+      const p = new ethers.BrowserProvider(window.ethereum);
+      await p.send("eth_requestAccounts", []);
 
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
-      if (chainId !== SEPOLIA_CHAIN_ID) {
-        setError("Conéctate a Sepolia en MetaMask.");
-        return;
-      }
+      const s = await p.getSigner();
+      const addr = await s.getAddress();
 
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const addr = accounts[0];
+      setProvider(p);
+      setSigner(s);
       setAccount(addr);
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const instance = new ethers.Contract(
-        AnimalDataTrace.address,
-        AnimalDataTrace.abi,
-        signer
-      );
-
-      setContract(instance);
-
-      const [isAdmin, isVet, isTransp, isProd, isOracle] = await Promise.all([
-        instance.hasRole(DEFAULT_ADMIN_ROLE, addr),
-        instance.hasRole(VETERINARIO_ROLE, addr),
-        instance.hasRole(TRANSPORTISTA_ROLE, addr),
-        instance.hasRole(PRODUCTOR_ROLE, addr),
-        instance.hasRole(ORACLE_ROLE, addr),
-      ]);
-
-      setRoles({
-        isAdmin,
-        isVeterinario: isVet,
-        isTransportista: isTransp,
-        isProductor: isProd,
-        isOracle,
-      });
     } catch (e) {
       console.error(e);
-      setError("Error al conectar la wallet.");
+      setError(e?.shortMessage || e?.message || "Error al conectar wallet");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ---------- Escrituras ----------
+  // ─────────────────────────────────────────
+  // 3️⃣ LISTENERS DE METAMASK (AUTO)
+  // ─────────────────────────────────────────
+  useEffect(() => {
+    if (!window.ethereum) return;
 
-  const registrarAnimal = useCallback(
-    async (id, especie, propietario) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
-      try {
-        const tx = await contract.registrarAnimal(id, especie, propietario);
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al registrar animal.");
-      } finally {
-        setTxLoading(false);
+    const handleAccountsChanged = async (accounts) => {
+      if (!accounts || accounts.length === 0) {
+        setAccount(null);
+        setSigner(null);
+        setProvider(null);
+        setRoles(EMPTY_ROLES);
+        return;
       }
-    },
-    [contract]
-  );
 
-  const registrarVacunacion = useCallback(
-    async (id, descripcion, fecha, ipfsHash, validadoIA) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
-      try {
-        const tx = await contract.registrarVacunacion(
-          id,
-          descripcion,
-          fecha,
-          ipfsHash,
-          validadoIA
-        );
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al registrar vacunación.");
-      } finally {
-        setTxLoading(false);
+      const p = new ethers.BrowserProvider(window.ethereum);
+      const s = await p.getSigner();
+
+      setProvider(p);
+      setSigner(s);
+      setAccount(accounts[0]);
+    };
+
+    const handleChainChanged = () => {
+      // Recomendación MetaMask
+      window.location.reload();
+    };
+
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    window.ethereum.on("chainChanged", handleChainChanged);
+
+    return () => {
+      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+      window.ethereum.removeListener("chainChanged", handleChainChanged);
+    };
+  }, []);
+
+  // ─────────────────────────────────────────
+  // 4️⃣ CONTRATOS (read / write)
+  // ─────────────────────────────────────────
+  const contractRead = useMemo(() => {
+    if (!provider) return null;
+    return new ethers.Contract(
+      AnimalDataTrace.address,
+      AnimalDataTrace.abi,
+      provider
+    );
+  }, [provider]);
+
+  const contractWrite = useMemo(() => {
+    if (!signer) return null;
+    return new ethers.Contract(
+      AnimalDataTrace.address,
+      AnimalDataTrace.abi,
+      signer
+    );
+  }, [signer]);
+
+  // ─────────────────────────────────────────
+  // 5️⃣ CARGAR ROLES (cada vez que cambia cuenta/contrato)
+  // ─────────────────────────────────────────
+  useEffect(() => {
+    const loadRoles = async () => {
+      if (!account || !contractRead) {
+        setRoles(EMPTY_ROLES);
+        return;
       }
-    },
-    [contract]
-  );
 
-  const registrarTransporte = useCallback(
-    async (id, descripcion, fecha, ipfsHash, validadoIA) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
       try {
-        const tx = await contract.registrarTransporte(
-          id,
-          descripcion,
-          fecha,
-          ipfsHash,
-          validadoIA
-        );
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al registrar transporte.");
-      } finally {
-        setTxLoading(false);
-      }
-    },
-    [contract]
-  );
+        // Si tus roles son public bytes32, esto funciona:
+        const [
+          adminRole,
+          vetRole,
+          transRole,
+          prodRole,
+          oracleRole,
+        ] = await Promise.all([
+          contractRead.DEFAULT_ADMIN_ROLE(),
+          contractRead.VETERINARIO_ROLE(),
+          contractRead.TRANSPORTISTA_ROLE(),
+          contractRead.PRODUCTOR_ROLE(),
+          contractRead.ORACLE_ROLE(),
+        ]);
 
-  // 🚚 Nueva función: transporte + meteo (mock oráculo)
+        const [
+          isAdmin,
+          isVeterinario,
+          isTransportista,
+          isProductor,
+          isOracle,
+        ] = await Promise.all([
+          contractRead.hasRole(adminRole, account),
+          contractRead.hasRole(vetRole, account),
+          contractRead.hasRole(transRole, account),
+          contractRead.hasRole(prodRole, account),
+          contractRead.hasRole(oracleRole, account),
+        ]);
+
+        setRoles({ isAdmin, isVeterinario, isTransportista, isProductor, isOracle });
+      } catch (e) {
+        console.error("Error cargando roles:", e);
+        setRoles(EMPTY_ROLES);
+      }
+    };
+
+    loadRoles();
+  }, [account, contractRead]);
+
+  // ─────────────────────────────────────────
+  // 6️⃣ FUNCIÓN: TRANSPORTE CON METEO (write)
+  // ─────────────────────────────────────────
   const registrarTransporteConMeteo = useCallback(
     async (id, descripcion, fecha, ipfsHash, zona) => {
-      if (!contract) throw new Error("Contrato no inicializado");
+      if (!contractWrite) throw new Error("Contrato no inicializado");
+
       setTxLoading(true);
       setError(null);
+
       try {
-        const tx = await contract.registrarTransporteConMeteo(
+        const tx = await contractWrite.registrarTransporteConMeteo(
           id,
           descripcion,
           fecha,
@@ -165,161 +184,17 @@ export function useAnimalTrace() {
         await tx.wait();
       } catch (e) {
         console.error(e);
-        setError(e.reason || "Error al registrar transporte con meteo.");
+        setError(e?.reason || e?.shortMessage || "Error al registrar transporte con meteo");
       } finally {
         setTxLoading(false);
       }
     },
-    [contract]
+    [contractWrite]
   );
 
-  const registrarAlimentacion = useCallback(
-    async (id, descripcion, fecha, ipfsHash, validadoIA) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
-      try {
-        const tx = await contract.registrarAlimentacion(
-          id,
-          descripcion,
-          fecha,
-          ipfsHash,
-          validadoIA
-        );
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al registrar alimentación.");
-      } finally {
-        setTxLoading(false);
-      }
-    },
-    [contract]
-  );
-
-  // ---------- Lecturas ----------
-
-  const obtenerHistorial = useCallback(
-    async (id) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      try {
-        const eventos = await contract.obtenerHistorial(id);
-        return eventos.map((ev) => ({
-          tipo: ev.tipo,
-          descripcion: ev.descripcion,
-          fecha: ev.fecha,
-          responsable: ev.responsable,
-          ipfsHash: ev.ipfsHash,
-          validadoIA: ev.validadoIA,
-          temperaturaExterior: ev.temperaturaExterior,
-          alertaMeteo: ev.alertaMeteo,
-          ipfsMeteoHash: ev.ipfsMeteoHash ?? "", // ✅ si existe en el contrato
-        }));
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al obtener historial.");
-        return [];
-      }
-    },
-    [contract]
-  );
-
-
-  const obtenerAnimal = useCallback(
-    async (id) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      try {
-        const a = await contract.obtenerAnimal(id);
-        return {
-          id: a.id,
-          especie: a.especie,
-          propietario: a.propietario,
-          existe: a.existe,
-        };
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al obtener animal.");
-        return null;
-      }
-    },
-    [contract]
-  );
-
-  // ---------- Roles extra: asignar (igual que antes) ----------
-
-  const asignarVeterinario = useCallback(
-    async (address) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
-      try {
-        const tx = await contract.grantRole(VETERINARIO_ROLE, address);
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al asignar rol VETERINARIO.");
-      } finally {
-        setTxLoading(false);
-      }
-    },
-    [contract]
-  );
-
-  const asignarTransportista = useCallback(
-    async (address) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
-      try {
-        const tx = await contract.grantRole(TRANSPORTISTA_ROLE, address);
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al asignar rol TRANSPORTISTA.");
-      } finally {
-        setTxLoading(false);
-      }
-    },
-    [contract]
-  );
-
-  const asignarProductor = useCallback(
-    async (address) => {
-      if (!contract) throw new Error("Contrato no inicializado");
-      setTxLoading(true);
-      setError(null);
-      try {
-        const tx = await contract.grantRole(PRODUCTOR_ROLE, address);
-        await tx.wait();
-      } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al asignar rol PRODUCTOR.");
-      } finally {
-        setTxLoading(false);
-      }
-    },
-    [contract]
-  );
-
-    const asignarOracle = useCallback(
-    async (address) => {
-        if (!contract) throw new Error("Contrato no inicializado");
-        setTxLoading(true);
-        setError(null);
-        try {
-        const tx = await contract.grantRole(ORACLE_ROLE, address);
-        await tx.wait();
-        } catch (e) {
-        console.error(e);
-        setError(e.reason || "Error al asignar rol ORACLE.");
-        } finally {
-        setTxLoading(false);
-        }
-    },
-    [contract]
-    );
-
-
+  // ─────────────────────────────────────────
+  // 7️⃣ DEVOLVER API DEL HOOK
+  // ─────────────────────────────────────────
   return {
     account,
     roles,
@@ -327,16 +202,6 @@ export function useAnimalTrace() {
     txLoading,
     error,
     connectWallet,
-    registrarAnimal,
-    registrarVacunacion,
-    registrarTransporte,
     registrarTransporteConMeteo,
-    registrarAlimentacion,
-    obtenerHistorial,
-    obtenerAnimal,
-    asignarVeterinario,
-    asignarTransportista,
-    asignarProductor,
-    asignarOracle,
   };
 }
