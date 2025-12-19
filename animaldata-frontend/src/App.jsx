@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useAnimalTrace } from "./hooks/useAnimalTrace";
 
-
 function App() {
   const {
     account,
@@ -42,7 +41,7 @@ function App() {
     fecha: "",
     ipfsHash: "",
     validadoIA: false,
-    zona: "", // 🆕 zona para meteo
+    zona: "",
   });
 
   const [historialId, setHistorialId] = useState("");
@@ -145,278 +144,297 @@ function App() {
     }
   };
 
-  // ───── UI ─────
-
   return (
-    <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
-      <h1>🐮 AnimalDataTrace dApp</h1>
-      <p>Sepolia · AccessControl · Trazabilidad + Meteo</p>
+    <>
+      <header className="hero">
+        <h1>🐮 AnimalDataTrace dApp</h1>
+        <p>Sepolia · AccessControl · Trazabilidad + Meteo</p>
+      </header>
 
-      {/* Conexión */}
-      <section style={{ marginBottom: 20 }}>
-        {!account ? (
-          <button onClick={connectWallet} disabled={loading}>
-            {loading ? "Conectando..." : "Conectar MetaMask"}
-          </button>
-        ) : (
+      <main className="container">
+        {/* Conexión */}
+        <section style={{ marginBottom: 20 }}>
+          {!account ? (
+            <button onClick={connectWallet} disabled={loading}>
+              {loading ? "Conectando..." : "Conectar MetaMask"}
+            </button>
+          ) : (
+            <>
+              <p>
+                Cuenta conectada: <b>{account}</b>
+              </p>
+              <p>
+                Roles → Admin: {roles.isAdmin ? "✅" : "❌"} · Veterinario:{" "}
+                {roles.isVeterinario ? "✅" : "❌"} · Transportista:{" "}
+                {roles.isTransportista ? "✅" : "❌"} · Productor:{" "}
+                {roles.isProductor ? "✅" : "❌"} · Oráculo:{" "}
+                {roles.isOracle ? "✅" : "❌"}
+              </p>
+            </>
+          )}
+
+          {error && <p style={{ color: "red" }}>⚠ {error}</p>}
+        </section>
+
+        {/* Asignar roles (solo admin) */}
+        {roles.isAdmin && (
           <>
-            <p>
-              Cuenta conectada: <b>{account}</b>
-            </p>
-            <p>
-              Roles → Admin: {roles.isAdmin ? "✅" : "❌"} · Veterinario:{" "}
-              {roles.isVeterinario ? "✅" : "❌"} · Transportista:{" "}
-              {roles.isTransportista ? "✅" : "❌"} · Productor:{" "}
-              {roles.isProductor ? "✅" : "❌"} · Oráculo:{" "}
-              {roles.isOracle ? "✅" : "❌"}
-            </p>
+            <hr />
+            <section style={{ marginTop: 20 }}>
+              <h2>🔐 Asignar roles (solo ADMIN)</h2>
+              <form
+                onSubmit={handleAsignarRol}
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <select
+                  value={nuevoRol.role}
+                  onChange={(e) =>
+                    setNuevoRol({ ...nuevoRol, role: e.target.value })
+                  }
+                >
+                  <option value="VETERINARIO">VETERINARIO</option>
+                  <option value="TRANSPORTISTA">TRANSPORTISTA</option>
+                  <option value="PRODUCTOR">PRODUCTOR</option>
+                  <option value="ORACLE">ORACLE</option>
+                </select>
+
+                <input
+                  type="text"
+                  placeholder="Dirección 0x..."
+                  style={{ minWidth: 260 }}
+                  value={nuevoRol.address}
+                  onChange={(e) =>
+                    setNuevoRol({ ...nuevoRol, address: e.target.value })
+                  }
+                />
+
+                <button type="submit" disabled={txLoading}>
+                  {txLoading ? "Enviando..." : "Asignar rol"}
+                </button>
+              </form>
+            </section>
           </>
         )}
 
-        {error && <p style={{ color: "red" }}>⚠ {error}</p>}
-      </section>
+        <hr />
 
-      {/* Asignar roles (solo admin) */}
-      {roles.isAdmin && (
-        <>
-          <hr />
-          <section style={{ marginTop: 20 }}>
-            <h2>🔐 Asignar roles (solo ADMIN)</h2>
-            <form
-              onSubmit={handleAsignarRol}
+        {/* Registrar animal */}
+        <section style={{ marginTop: 20 }}>
+          <h2>1️⃣ Registrar animal (solo ADMIN)</h2>
+          <form
+            onSubmit={handleRegistrarAnimal}
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            <input
+              type="number"
+              placeholder="ID"
+              value={nuevoAnimal.id}
+              onChange={(e) =>
+                setNuevoAnimal({ ...nuevoAnimal, id: e.target.value })
+              }
+            />
+            <input
+              type="text"
+              placeholder="Especie"
+              value={nuevoAnimal.especie}
+              onChange={(e) =>
+                setNuevoAnimal({ ...nuevoAnimal, especie: e.target.value })
+              }
+            />
+            <input
+              type="text"
+              placeholder="Propietario"
+              value={nuevoAnimal.propietario}
+              onChange={(e) =>
+                setNuevoAnimal({ ...nuevoAnimal, propietario: e.target.value })
+              }
+            />
+            <button type="submit" disabled={txLoading}>
+              {txLoading ? "Enviando..." : "Registrar animal"}
+            </button>
+          </form>
+        </section>
+
+        <hr />
+
+        {/* Registrar eventos */}
+        <section style={{ marginTop: 20 }}>
+          <h2>2️⃣ Registrar eventos</h2>
+          <p>
+            Vacunación → requiere rol <b>VETERINARIO</b>. <br />
+            Transporte → requiere rol <b>TRANSPORTISTA</b>. <br />
+            Transporte + meteo → rol <b>TRANSPORTISTA</b> + luego ORACLE. <br />
+            Alimentación → requiere rol <b>PRODUCTOR</b>.
+          </p>
+
+          <form
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              maxWidth: 520,
+            }}
+          >
+            <input
+              type="number"
+              placeholder="ID animal"
+              value={evento.id}
+              onChange={(e) => setEvento({ ...evento, id: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Descripción"
+              value={evento.descripcion}
+              onChange={(e) =>
+                setEvento({ ...evento, descripcion: e.target.value })
+              }
+            />
+            <input
+              type="text"
+              placeholder="Fecha (ej. 2025-12-10)"
+              value={evento.fecha}
+              onChange={(e) => setEvento({ ...evento, fecha: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="IPFS hash (opcional)"
+              value={evento.ipfsHash}
+              onChange={(e) => setEvento({ ...evento, ipfsHash: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Zona meteo (ej. Sevilla, ES)"
+              value={evento.zona}
+              onChange={(e) => setEvento({ ...evento, zona: e.target.value })}
+            />
+            <label>
+              <input
+                type="checkbox"
+                checked={evento.validadoIA}
+                onChange={(e) =>
+                  setEvento({ ...evento, validadoIA: e.target.checked })
+                }
+              />{" "}
+              Validado por IA (manual)
+            </label>
+
+            <div
               style={{
                 display: "flex",
                 gap: 8,
+                marginTop: 8,
                 flexWrap: "wrap",
-                alignItems: "center",
               }}
             >
-              <select
-                value={nuevoRol.role}
-                onChange={(e) =>
-                  setNuevoRol({ ...nuevoRol, role: e.target.value })
-                }
+              <button
+                type="button"
+                onClick={handleRegistrarVacunacion}
+                disabled={txLoading}
               >
-                <option value="VETERINARIO">VETERINARIO</option>
-                <option value="TRANSPORTISTA">TRANSPORTISTA</option>
-                <option value="PRODUCTOR">PRODUCTOR</option>
-                <option value="ORACLE">ORACLE</option>
-              </select>
-
-              <input
-                type="text"
-                placeholder="Dirección 0x..."
-                style={{ minWidth: 260 }}
-                value={nuevoRol.address}
-                onChange={(e) =>
-                  setNuevoRol({ ...nuevoRol, address: e.target.value })
-                }
-              />
-
-              <button type="submit" disabled={txLoading}>
-                {txLoading ? "Enviando..." : "Asignar rol"}
+                {txLoading ? "Enviando..." : "Registrar vacunación"}
               </button>
-            </form>
-          </section>
-        </>
-      )}
+              <button
+                type="button"
+                onClick={handleRegistrarTransporte}
+                disabled={txLoading}
+              >
+                {txLoading ? "Enviando..." : "Registrar transporte"}
+              </button>
+              <button
+                type="button"
+                onClick={handleRegistrarTransporteConMeteo}
+                disabled={txLoading}
+              >
+                {txLoading ? "Enviando..." : "Transporte con meteo OpenWeatherOneCall"}
+              </button>
+              <button
+                type="button"
+                onClick={handleRegistrarAlimentacion}
+                disabled={txLoading}
+              >
+                {txLoading ? "Enviando..." : "Registrar alimentación"}
+              </button>
+            </div>
+          </form>
+        </section>
 
-      <hr />
+        <hr />
 
-      {/* Registrar animal */}
-      <section style={{ marginTop: 20 }}>
-        <h2>1️⃣ Registrar animal (solo ADMIN)</h2>
-        <form
-          onSubmit={handleRegistrarAnimal}
-          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-        >
-          <input
-            type="number"
-            placeholder="ID"
-            value={nuevoAnimal.id}
-            onChange={(e) =>
-              setNuevoAnimal({ ...nuevoAnimal, id: e.target.value })
-            }
-          />
-          <input
-            type="text"
-            placeholder="Especie"
-            value={nuevoAnimal.especie}
-            onChange={(e) =>
-              setNuevoAnimal({ ...nuevoAnimal, especie: e.target.value })
-            }
-          />
-          <input
-            type="text"
-            placeholder="Propietario"
-            value={nuevoAnimal.propietario}
-            onChange={(e) =>
-              setNuevoAnimal({ ...nuevoAnimal, propietario: e.target.value })
-            }
-          />
-          <button type="submit" disabled={txLoading}>
-            {txLoading ? "Enviando..." : "Registrar animal"}
-          </button>
-        </form>
-      </section>
-
-      <hr />
-
-      {/* Registrar eventos */}
-      <section style={{ marginTop: 20 }}>
-        <h2>2️⃣ Registrar eventos</h2>
-        <p>
-          Vacunación → requiere rol <b>VETERINARIO</b>. <br />
-          Transporte → requiere rol <b>TRANSPORTISTA</b>. <br />
-          Transporte + meteo → rol <b>TRANSPORTISTA</b> + luego ORACLE. <br />
-          Alimentación → requiere rol <b>PRODUCTOR</b>.
-        </p>
-
-        <form
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            maxWidth: 500,
-          }}
-        >
-          <input
-            type="number"
-            placeholder="ID animal"
-            value={evento.id}
-            onChange={(e) => setEvento({ ...evento, id: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Descripción"
-            value={evento.descripcion}
-            onChange={(e) =>
-              setEvento({ ...evento, descripcion: e.target.value })
-            }
-          />
-          <input
-            type="text"
-            placeholder="Fecha (ej. 2025-12-10)"
-            value={evento.fecha}
-            onChange={(e) => setEvento({ ...evento, fecha: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="IPFS hash (opcional)"
-            value={evento.ipfsHash}
-            onChange={(e) =>
-              setEvento({ ...evento, ipfsHash: e.target.value })
-            }
-          />
-          <input
-            type="text"
-            placeholder="Zona meteo (ej. Sevilla, ES)"
-            value={evento.zona}
-            onChange={(e) => setEvento({ ...evento, zona: e.target.value })}
-          />
-          <label>
+        {/* Consultar animal */}
+        <section style={{ marginTop: 20 }}>
+          <h2>3️⃣ Consultar datos de un animal</h2>
+          <form
+            onSubmit={handleObtenerAnimal}
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
             <input
-              type="checkbox"
-              checked={evento.validadoIA}
-              onChange={(e) =>
-                setEvento({ ...evento, validadoIA: e.target.checked })
-              }
-            />{" "}
-            Validado por IA (manual)
-          </label>
+              type="number"
+              placeholder="ID animal"
+              value={consultaId}
+              onChange={(e) => setConsultaId(e.target.value)}
+            />
+            <button type="submit">Consultar</button>
+          </form>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-            <button onClick={handleRegistrarVacunacion} disabled={txLoading}>
-              {txLoading ? "Enviando..." : "Registrar vacunación"}
-            </button>
-            <button onClick={handleRegistrarTransporte} disabled={txLoading}>
-              {txLoading ? "Enviando..." : "Registrar transporte"}
-            </button>
-            <button
-              onClick={handleRegistrarTransporteConMeteo}
-              disabled={txLoading}
-            >
-              {txLoading ? "Enviando..." : "Transporte con meteo OpenWeatherOneCall"}
-            </button>
-            <button onClick={handleRegistrarAlimentacion} disabled={txLoading}>
-              {txLoading ? "Enviando..." : "Registrar alimentación"}
-            </button>
-          </div>
-        </form>
-      </section>
+          {animalConsultado && (
+            <div style={{ marginTop: 10 }}>
+              <p>
+                <b>ID:</b> {String(animalConsultado.id)} <br />
+                <b>Especie:</b> {animalConsultado.especie} <br />
+                <b>Propietario:</b> {animalConsultado.propietario} <br />
+                <b>Existe:</b> {animalConsultado.existe ? "Sí" : "No"}
+              </p>
+            </div>
+          )}
+        </section>
 
-      <hr />
+        <hr />
 
-      {/* Consultar animal */}
-      <section style={{ marginTop: 20 }}>
-        <h2>3️⃣ Consultar datos de un animal</h2>
-        <form
-          onSubmit={handleObtenerAnimal}
-          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-        >
-          <input
-            type="number"
-            placeholder="ID animal"
-            value={consultaId}
-            onChange={(e) => setConsultaId(e.target.value)}
-          />
-          <button type="submit">Consultar</button>
-        </form>
+        {/* Historial */}
+        <section style={{ marginTop: 20, marginBottom: 40 }}>
+          <h2>4️⃣ Historial de eventos de un animal</h2>
+          <form
+            onSubmit={handleObtenerHistorial}
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            <input
+              type="number"
+              placeholder="ID animal"
+              value={historialId}
+              onChange={(e) => setHistorialId(e.target.value)}
+            />
+            <button type="submit">Ver historial</button>
+          </form>
 
-        {animalConsultado && (
-          <div style={{ marginTop: 10 }}>
-            <p>
-              <b>ID:</b> {String(animalConsultado.id)} <br />
-              <b>Especie:</b> {animalConsultado.especie} <br />
-              <b>Propietario:</b> {animalConsultado.propietario} <br />
-              <b>Existe:</b> {animalConsultado.existe ? "Sí" : "No"}
-            </p>
-          </div>
-        )}
-      </section>
+          <ul style={{ marginTop: 10 }}>
+            {historial.map((ev, idx) => {
+              const ipfsToShow = ev.ipfsMeteoHash || ev.ipfsHash || "-";
 
-      <hr />
-
-      {/* Historial */}
-      <section style={{ marginTop: 20, marginBottom: 40 }}>
-        <h2>4️⃣ Historial de eventos de un animal</h2>
-        <form
-          onSubmit={handleObtenerHistorial}
-          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-        >
-          <input
-            type="number"
-            placeholder="ID animal"
-            value={historialId}
-            onChange={(e) => setHistorialId(e.target.value)}
-          />
-          <button type="submit">Ver historial</button>
-        </form>
-
-        <ul style={{ marginTop: 10 }}>
-          {historial.map((ev, idx) => {
-            const ipfsToShow = ev.ipfsMeteoHash || ev.ipfsHash || "-";
-
-            return (
-              <li key={idx} style={{ marginBottom: 12 }}>
-                <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
-                Resp: {ev.responsable} <br />
-                IPFS: {ipfsToShow} <br />
-                IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
-                {/* Datos meteo */}
-                {ev.temperaturaExterior !== undefined && (
-                  <>
-                    Temperatura exterior: {String(ev.temperaturaExterior)} ºC <br />
-                    Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
-                  </>
-                )}
-              </li>
-            );
-          })}
-          {historial.length === 0 && <p>No hay eventos cargados.</p>}
-        </ul>
-      </section>
-    </div>
+              return (
+                <li key={idx} style={{ marginBottom: 12 }}>
+                  <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
+                  Resp: {ev.responsable} <br />
+                  IPFS: {ipfsToShow} <br />
+                  IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
+                  {ev.temperaturaExterior !== undefined && (
+                    <>
+                      Temperatura exterior: {String(ev.temperaturaExterior)} ºC <br />
+                      Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
+                    </>
+                  )}
+                </li>
+              );
+            })}
+            {historial.length === 0 && <p>No hay eventos cargados.</p>}
+          </ul>
+        </section>
+      </main>
+    </>
   );
 }
 

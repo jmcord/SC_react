@@ -3,16 +3,31 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* quitamos el "dark mode" por defecto del template */
+  color: #213547;
+  background-color: #f4f6f8;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  background: #f4f6f8;
+}
+
+/* Links */
 a {
   font-weight: 500;
   color: #646cff;
@@ -22,63 +37,76 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
+/* Tipografía */
 h1 {
-  font-size: 3.2em;
+  margin: 0;
+  font-size: 3rem;
   line-height: 1.1;
 }
 
+/* Botones (mantén tu estilo, pero más claro) */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
+  border-radius: 10px;
+  border: 1px solid #d0d7de;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #ffffff;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.2s ease, transform 0.05s ease;
 }
 button:hover {
   border-color: #646cff;
+}
+button:active {
+  transform: translateY(1px);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
-
-html, body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
-
-body {
+/* ─────────────────────────────────────────
+   HERO (fondo solo arriba con bg.png)
+   ───────────────────────────────────────── */
+.hero {
+  min-height: 220px;
+  padding: 26px 20px;
   background-image: url("/bg.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
-  font-family: Arial, sans-serif;
+  position: relative;
+}
+
+/* overlay para que se lea el texto */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Contenedor “tarjeta” para el contenido */
+.container {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  margin-top: -32px; /* efecto overlay sobre el hero */
+}
+
+/* Para que tus <hr> no se vean tan agresivos */
+hr {
+  border: 0;
+  border-top: 1px solid #e6e8eb;
+  margin: 20px 0;
 }
