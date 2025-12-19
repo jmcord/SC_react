@@ -1,6 +1,8 @@
 // src/App.jsx
 import { useState } from "react";
 import { useAnimalTrace } from "./hooks/useAnimalTrace";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 function App() {
   const {
@@ -29,6 +31,7 @@ function App() {
     asignarOracle,
   } = useAnimalTrace();
 
+  // ───── Estados ─────
   const [nuevoAnimal, setNuevoAnimal] = useState({
     id: "",
     especie: "",
@@ -56,7 +59,6 @@ function App() {
   });
 
   // ───── Handlers ─────
-
   const handleRegistrarAnimal = async (e) => {
     e.preventDefault();
     if (!nuevoAnimal.id) return;
@@ -144,12 +146,10 @@ function App() {
     }
   };
 
+  // ───── UI ─────
   return (
     <>
-      <header className="hero">
-        <h1>🐮 AnimalDataTrace dApp</h1>
-        <p>Sepolia · AccessControl · Trazabilidad + Meteo</p>
-      </header>
+      <Header />
 
       <main className="container">
         {/* Conexión */}
@@ -172,24 +172,18 @@ function App() {
               </p>
             </>
           )}
-
           {error && <p style={{ color: "red" }}>⚠ {error}</p>}
         </section>
 
-        {/* Asignar roles (solo admin) */}
+        {/* Asignar roles */}
         {roles.isAdmin && (
           <>
             <hr />
-            <section style={{ marginTop: 20 }}>
+            <section>
               <h2>🔐 Asignar roles (solo ADMIN)</h2>
               <form
                 onSubmit={handleAsignarRol}
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
+                style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
               >
                 <select
                   value={nuevoRol.role}
@@ -206,11 +200,11 @@ function App() {
                 <input
                   type="text"
                   placeholder="Dirección 0x..."
-                  style={{ minWidth: 260 }}
                   value={nuevoRol.address}
                   onChange={(e) =>
                     setNuevoRol({ ...nuevoRol, address: e.target.value })
                   }
+                  style={{ minWidth: 260 }}
                 />
 
                 <button type="submit" disabled={txLoading}>
@@ -224,7 +218,7 @@ function App() {
         <hr />
 
         {/* Registrar animal */}
-        <section style={{ marginTop: 20 }}>
+        <section>
           <h2>1️⃣ Registrar animal (solo ADMIN)</h2>
           <form
             onSubmit={handleRegistrarAnimal}
@@ -263,14 +257,8 @@ function App() {
         <hr />
 
         {/* Registrar eventos */}
-        <section style={{ marginTop: 20 }}>
+        <section>
           <h2>2️⃣ Registrar eventos</h2>
-          <p>
-            Vacunación → requiere rol <b>VETERINARIO</b>. <br />
-            Transporte → requiere rol <b>TRANSPORTISTA</b>. <br />
-            Transporte + meteo → rol <b>TRANSPORTISTA</b> + luego ORACLE. <br />
-            Alimentación → requiere rol <b>PRODUCTOR</b>.
-          </p>
 
           <form
             style={{
@@ -312,6 +300,7 @@ function App() {
               value={evento.zona}
               onChange={(e) => setEvento({ ...evento, zona: e.target.value })}
             />
+
             <label>
               <input
                 type="checkbox"
@@ -323,41 +312,34 @@ function App() {
               Validado por IA (manual)
             </label>
 
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginTop: 8,
-                flexWrap: "wrap",
-              }}
-            >
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={handleRegistrarVacunacion}
                 disabled={txLoading}
               >
-                {txLoading ? "Enviando..." : "Registrar vacunación"}
+                Registrar vacunación
               </button>
               <button
                 type="button"
                 onClick={handleRegistrarTransporte}
                 disabled={txLoading}
               >
-                {txLoading ? "Enviando..." : "Registrar transporte"}
+                Registrar transporte
               </button>
               <button
                 type="button"
                 onClick={handleRegistrarTransporteConMeteo}
                 disabled={txLoading}
               >
-                {txLoading ? "Enviando..." : "Transporte con meteo OpenWeatherOneCall"}
+                Transporte con meteo
               </button>
               <button
                 type="button"
                 onClick={handleRegistrarAlimentacion}
                 disabled={txLoading}
               >
-                {txLoading ? "Enviando..." : "Registrar alimentación"}
+                Registrar alimentación
               </button>
             </div>
           </form>
@@ -365,42 +347,12 @@ function App() {
 
         <hr />
 
-        {/* Consultar animal */}
-        <section style={{ marginTop: 20 }}>
-          <h2>3️⃣ Consultar datos de un animal</h2>
-          <form
-            onSubmit={handleObtenerAnimal}
-            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-          >
-            <input
-              type="number"
-              placeholder="ID animal"
-              value={consultaId}
-              onChange={(e) => setConsultaId(e.target.value)}
-            />
-            <button type="submit">Consultar</button>
-          </form>
-
-          {animalConsultado && (
-            <div style={{ marginTop: 10 }}>
-              <p>
-                <b>ID:</b> {String(animalConsultado.id)} <br />
-                <b>Especie:</b> {animalConsultado.especie} <br />
-                <b>Propietario:</b> {animalConsultado.propietario} <br />
-                <b>Existe:</b> {animalConsultado.existe ? "Sí" : "No"}
-              </p>
-            </div>
-          )}
-        </section>
-
-        <hr />
-
         {/* Historial */}
-        <section style={{ marginTop: 20, marginBottom: 40 }}>
-          <h2>4️⃣ Historial de eventos de un animal</h2>
+        <section>
+          <h2>3️⃣ Historial de eventos</h2>
           <form
             onSubmit={handleObtenerHistorial}
-            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+            style={{ display: "flex", gap: 8 }}
           >
             <input
               type="number"
@@ -411,29 +363,18 @@ function App() {
             <button type="submit">Ver historial</button>
           </form>
 
-          <ul style={{ marginTop: 10 }}>
-            {historial.map((ev, idx) => {
-              const ipfsToShow = ev.ipfsMeteoHash || ev.ipfsHash || "-";
-
-              return (
-                <li key={idx} style={{ marginBottom: 12 }}>
-                  <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
-                  Resp: {ev.responsable} <br />
-                  IPFS: {ipfsToShow} <br />
-                  IA / Validación: {ev.validadoIA ? "✅" : "❌"} <br />
-                  {ev.temperaturaExterior !== undefined && (
-                    <>
-                      Temperatura exterior: {String(ev.temperaturaExterior)} ºC <br />
-                      Alerta meteo: {ev.alertaMeteo ? "⚠ Sí" : "No"}
-                    </>
-                  )}
-                </li>
-              );
-            })}
-            {historial.length === 0 && <p>No hay eventos cargados.</p>}
+          <ul>
+            {historial.map((ev, idx) => (
+              <li key={idx}>
+                <b>{ev.tipo}</b> · {ev.descripcion} · {ev.fecha} <br />
+                IPFS: {ev.ipfsMeteoHash || ev.ipfsHash || "-"}
+              </li>
+            ))}
           </ul>
         </section>
       </main>
+
+      <Footer />
     </>
   );
 }
